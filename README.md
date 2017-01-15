@@ -6,7 +6,7 @@ A view with some information from Surefire, PMD, Findbugs and Checkstyle reports
 
 ## How it works
 
-This plugins adds a view that extends ListView. When the view is displayed, the plugin looks for XML supported files for building information in the top of the view. For efficiency, the collected data are cached in an XML file. Thus the RAM memory is not affected and the reloading is fast.
+This plugins add a view that extends ListView. When the view is displayed, the plugin look for XML supported files for building information in the top of the view. For efficiency, the collected data are cached in an XML file. Thus the RAM memory is not affected and the reloading is fast.
 
 ## What report are supported
 
