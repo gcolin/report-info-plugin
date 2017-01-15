@@ -69,7 +69,7 @@ public class Tests implements NotificationBuilder {
                 Node error = errors.item(i);
                 NamedNodeMap attr = error.getAttributes();
                 NamedNodeMap pattr = error.getParentNode().getAttributes();
-                jn.getList().add(new NotificationDetail(builder.job.getName(), NotificationType.TEST,
+                jn.getList().add(new NotificationDetail(NotificationType.TEST,
                         attr.getNamedItem("message").getNodeValue()
                         + " in " + pattr.getNamedItem("classname").getNodeValue() + "." + pattr.getNamedItem("name").getNodeValue()));
             }

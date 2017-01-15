@@ -23,9 +23,6 @@
  */
 package org.jenkinsci.plugins.reportinfo.builder;
 
-import edu.umd.cs.findbugs.BugInstance;
-import edu.umd.cs.findbugs.SortedBugCollection;
-import edu.umd.cs.findbugs.SourceLineAnnotation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -33,12 +30,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
-import org.dom4j.DocumentException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import org.jenkinsci.plugins.reportinfo.ReportInfo;
 import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 import org.jenkinsci.plugins.reportinfo.model.NotificationDetail;
 import org.jenkinsci.plugins.reportinfo.model.NotificationType;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * FindBugs XML reader.
@@ -63,14 +69,37 @@ public class FindBugs implements NotificationBuilder {
 
     @Override
     public void parse(Path file, JobNotification jn, AllNotificationBuilder builder) {
+        ResourceBundle rb = ResourceBundle.getBundle("findbugsmessages");
         try {
-            SortedBugCollection collection = new SortedBugCollection();
-            collection.readXML(file.toFile());
-            for (BugInstance warning : collection.getCollection()) {
-                SourceLineAnnotation sourceLine = warning.getPrimarySourceLineAnnotation();
-                jn.getList().add(new NotificationDetail(builder.job.getName(), NotificationType.FINDBUG, warning.getMessage() + " at " + sourceLine.toString() + " in " + sourceLine.getClassName()));
+            Document doc = builder.factory.newDocumentBuilder().parse(file.toFile());
+            XPath xpath = builder.pathFactory.newXPath();
+            NodeList errors = doc.getElementsByTagName("BugInstance");
+            for (int i = 0; i < errors.getLength(); i++) {
+                Node error = errors.item(i);
+                NamedNodeMap attr = error.getAttributes();
+                StringBuilder message = new StringBuilder(attr.getNamedItem("abbrev").getNodeValue());
+                message.append(": ");
+                String type = attr.getNamedItem("type").getNodeValue();
+                if(rb.containsKey(type)) {
+                    message.append(rb.getString(type));
+                } else {
+                    message.append(type);
+                }
+                NodeList sources = (NodeList) xpath.evaluate("SourceLine", error, XPathConstants.NODESET);
+                if(sources.getLength() > 0) {
+                    Node source = sources.item(0);
+                    NamedNodeMap sattr = source.getAttributes();
+                    message.append(" in ");
+                    message.append(sattr.getNamedItem("classname").getNodeValue());
+                    message.append(" at [line ");
+                    message.append(sattr.getNamedItem("start").getNodeValue());
+                    message.append("]");
+                }
+                
+                jn.getList().add(new NotificationDetail(NotificationType.FINDBUG,
+                        message.toString()));
             }
-        } catch (DocumentException | IOException ex) {
+        } catch (XPathExpressionException | IOException | SAXException | ParserConfigurationException ex) {
             ReportInfo.LOG.log(Level.SEVERE, null, ex);
         }
     }

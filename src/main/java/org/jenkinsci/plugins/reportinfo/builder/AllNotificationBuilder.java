@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.reportinfo.builder;
 
-import hudson.model.Job;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -44,15 +43,13 @@ import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 public class AllNotificationBuilder extends SimpleFileVisitor<Path> {
 
     protected JobNotification jn;
-    Job job;
     protected Path path;
     private final NotificationBuilder[] all = {new Checkstyle(), new FindBugs(), new PMD(), new Tests()};
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     XPathFactory pathFactory = XPathFactory.newInstance();
 
-    public AllNotificationBuilder(JobNotification jn, Job job, Path path) {
+    public AllNotificationBuilder(JobNotification jn, Path path) {
         this.jn = jn;
-        this.job = job;
         this.path = path;
     }
 

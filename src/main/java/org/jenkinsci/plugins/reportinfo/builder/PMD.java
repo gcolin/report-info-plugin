@@ -76,9 +76,9 @@ public class PMD implements NotificationBuilder {
                 Node error = errors.item(i);
                 NamedNodeMap attr = error.getAttributes();
                 Node column = attr.getNamedItem("begincolumn");
-                jn.getList().add(new NotificationDetail(builder.job.getName(), NotificationType.PMD,
+                jn.getList().add(new NotificationDetail(NotificationType.PMD,
                         error.getTextContent().trim()
-                        + " at [" + attr.getNamedItem("beginline").getNodeValue()
+                        + " at [line " + attr.getNamedItem("beginline").getNodeValue()
                         + (column == null ? "" : ":" + column.getNodeValue())
                         + "] in " + error.getParentNode().getAttributes().getNamedItem("name").getNodeValue()));
             }

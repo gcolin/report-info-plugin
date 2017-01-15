@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
@@ -39,6 +40,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 @XmlSeeAlso(NotificationDetail.class)
 public class JobNotification {
 
+    @XmlElement(name = "elt")
     private List<NotificationDetail> list = new ArrayList<>();
     private long lastModified;
 

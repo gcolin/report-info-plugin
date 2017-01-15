@@ -76,9 +76,9 @@ public class Checkstyle implements NotificationBuilder {
                 Node error = errors.item(i);
                 NamedNodeMap attr = error.getAttributes();
                 Node column = attr.getNamedItem("column");
-                jn.getList().add(new NotificationDetail(builder.job.getName(), NotificationType.CHECKSTYLE,
+                jn.getList().add(new NotificationDetail(NotificationType.CHECKSTYLE,
                         attr.getNamedItem("message").getNodeValue()
-                        + " at [" + attr.getNamedItem("line").getNodeValue()
+                        + " at [line " + attr.getNamedItem("line").getNodeValue()
                         + (column == null ? "" : ":" + column.getNodeValue())
                         + "] in " + error.getParentNode().getAttributes().getNamedItem("name").getNodeValue()));
             }

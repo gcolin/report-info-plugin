@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2017 Admin.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package org.jenkinsci.plugins.reportinfo;
 
 import org.jenkinsci.plugins.reportinfo.model.NotificationBox;
@@ -124,6 +147,7 @@ public class ReportInfo extends ListView {
             }
 
             for (NotificationDetail detail : notification.getList()) {
+                detail.setJob(job.getName());
                 notifications.get(detail.getType().ordinal()).getDetails().add(detail);
             }
         }
@@ -164,7 +188,7 @@ public class ReportInfo extends ListView {
             NodeList gradleBuild = (NodeList) xpath.evaluate("/project/builders/hudson.plugins.gradle.Gradle/rootBuildScriptDir", doc, XPathConstants.NODESET);
             if (gradleBuild.getLength() > 0) {
                 Path path = Paths.get(gradleBuild.item(0).getTextContent().trim());
-                new AllNotificationBuilder(n, job, path).start();
+                new AllNotificationBuilder(n, path).start();
             } else {
                 NodeList rootPom = (NodeList) xpath.evaluate("/maven2-moduleset/rootPOM", doc, XPathConstants.NODESET);
                 boolean find = false;
@@ -172,7 +196,7 @@ public class ReportInfo extends ListView {
                     File rootPomFile = new File(rootPom.item(0).getTextContent().trim());
                     if (rootPomFile.isAbsolute()) {
                         find = true;
-                        new AllNotificationBuilder(n, job, rootPomFile.getParentFile().toPath()).start();
+                        new AllNotificationBuilder(n, rootPomFile.getParentFile().toPath()).start();
                     } else if (job.getLastBuild() instanceof AbstractBuild) {
                         find = true;
                         AbstractBuild build = (AbstractBuild) job.getLastBuild();
@@ -181,7 +205,7 @@ public class ReportInfo extends ListView {
                             URI uri = workspace.toURI();
                             if (uri != null) {
                                 rootPomFile = new File(new File(uri.toURL().getFile()), rootPom.item(0).getTextContent().trim());
-                                new AllNotificationBuilder(n, job, rootPomFile.getParentFile().toPath()).start();
+                                new AllNotificationBuilder(n, rootPomFile.getParentFile().toPath()).start();
                             }
                         }
                     }
@@ -195,7 +219,7 @@ public class ReportInfo extends ListView {
                             if (workspace != null) {
                                 URI uri = workspace.toURI();
                                 if (uri != null) {
-                                    new AllNotificationBuilder(n, job, new File(uri.toURL().getFile()).toPath()).start();
+                                    new AllNotificationBuilder(n, new File(uri.toURL().getFile()).toPath()).start();
                                 }
                             }
                         }
@@ -209,11 +233,9 @@ public class ReportInfo extends ListView {
         Lock lock = getLock(job).writeLock();
         lock.lock();
         try {
-            try {
-                CONTEXT.createMarshaller().marshal(n, new File(job.getRootDir(), "reportinfo.xml"));
-            } catch (JAXBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
+            CONTEXT.createMarshaller().marshal(n, new File(job.getRootDir(), "reportinfo.xml"));
+        } catch (JAXBException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             lock.unlock();
         }

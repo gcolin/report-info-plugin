@@ -25,6 +25,8 @@ package org.jenkinsci.plugins.reportinfo.model;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -33,17 +35,22 @@ import javax.xml.bind.annotation.XmlAccessorType;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class NotificationDetail {
 
+    @XmlTransient
     private String job;
+    @XmlAttribute
     private NotificationType type;
     private String message;
 
     public NotificationDetail() {
     }
 
-    public NotificationDetail(String job, NotificationType type, String message) {
-        this.job = job;
+    public NotificationDetail(NotificationType type, String message) {
         this.type = type;
         this.message = message;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
     }
 
     public String getJob() {
