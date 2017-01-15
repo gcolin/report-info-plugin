@@ -2,7 +2,7 @@
 
 A view with some information from Surefire, PMD, Findbugs and Checkstyle reports.
 
-[[https://github.com/gcolin/reportinfo/blob/master/img/screen.png|alt=screen]]
+![screen](https://github.com/gcolin/report-info/raw/master/screen.png)
 
 ## How it works
 
