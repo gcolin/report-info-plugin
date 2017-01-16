@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Admin.
+ * Copyright 2017 Gael COLIN.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,12 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import org.jenkinsci.plugins.reportinfo.ReportInfo;
 import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 import org.jenkinsci.plugins.reportinfo.model.NotificationDetail;
 import org.jenkinsci.plugins.reportinfo.model.NotificationType;
@@ -77,9 +75,15 @@ public class FindBugs implements NotificationBuilder {
             for (int i = 0; i < errors.getLength(); i++) {
                 Node error = errors.item(i);
                 NamedNodeMap attr = error.getAttributes();
-                StringBuilder message = new StringBuilder(attr.getNamedItem("abbrev").getNodeValue());
-                message.append(": ");
+                StringBuilder message = new StringBuilder();
+                Node abbrevNode = attr.getNamedItem("abbrev");
                 String type = attr.getNamedItem("type").getNodeValue();
+                if(abbrevNode != null) {
+                    message.append(abbrevNode.getNodeValue());
+                } else {
+                    message.append(type);
+                }
+                message.append(": ");
                 if(rb.containsKey(type)) {
                     message.append(rb.getString(type));
                 } else {
@@ -94,13 +98,28 @@ public class FindBugs implements NotificationBuilder {
                     message.append(" at [line ");
                     message.append(sattr.getNamedItem("start").getNodeValue());
                     message.append("]");
+                } else {
+                    Node parent = error.getParentNode();
+                    if("file".equals(parent.getNodeName())) {
+                        Node classname = parent.getAttributes().getNamedItem("classname");
+                        if(classname != null) {
+                            message.append(" in ");
+                            message.append(classname.getNodeValue());
+                        }
+                    }
+                    Node lineNumber = attr.getNamedItem("lineNumber");
+                    if(lineNumber != null) {
+                        message.append(" at [line ");
+                        message.append(lineNumber.getNodeValue());
+                        message.append("]");
+                    }
                 }
                 
                 jn.getList().add(new NotificationDetail(NotificationType.FINDBUG,
                         message.toString()));
             }
         } catch (XPathExpressionException | IOException | SAXException | ParserConfigurationException ex) {
-            ReportInfo.LOG.log(Level.SEVERE, null, ex);
+            ex.printStackTrace(builder.logger);
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Admin.
+ * Copyright 2017 Gael COLIN.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,18 +26,11 @@ package org.jenkinsci.plugins.reportinfo;
 import org.jenkinsci.plugins.reportinfo.model.NotificationBox;
 import org.jenkinsci.plugins.reportinfo.model.NotificationDetail;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.model.AbstractBuild;
 import hudson.model.Job;
 import hudson.model.ListView;
-import hudson.model.Run;
 import hudson.model.TopLevelItem;
 import hudson.model.ViewDescriptor;
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
@@ -52,18 +45,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import org.jenkinsci.plugins.reportinfo.builder.AllNotificationBuilder;
 import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 import org.jenkinsci.plugins.reportinfo.model.NotificationType;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * The new View.
@@ -94,7 +77,7 @@ public class ReportInfo extends ListView {
         super(name);
     }
 
-    public ReadWriteLock getLock(Job job) {
+    public static ReadWriteLock getLock(Job job) {
         masterLock.lock();
         try {
             ReadWriteLock lock = locks.get(job.getName());
@@ -121,34 +104,24 @@ public class ReportInfo extends ListView {
             }
             Job job = (Job) item;
             File cache = new File(job.getRootDir(), "reportinfo.xml");
-            long last = getLastStart(job);
-            if (last == 0L) {
+            if (!cache.exists()) {
                 continue;
             }
-            JobNotification notification;
-            if (cache.exists()) {
-                try {
-                    Lock lock = getLock(job).readLock();
-                    lock.lock();
-                    try {
-                        notification = (JobNotification) CONTEXT.createUnmarshaller().unmarshal(cache);
-                    } finally {
-                        lock.unlock();
-                    }
-                    if (last > notification.getLastModified()) {
-                        notification = refresh(job, last);
-                    }
-                } catch (JAXBException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                    notification = refresh(job, last);
-                }
-            } else {
-                notification = refresh(job, last);
+            JobNotification notification = null;
+            Lock lock = getLock(job).readLock();
+            lock.lock();
+            try {
+                notification = (JobNotification) CONTEXT.createUnmarshaller().unmarshal(cache);
+            } catch (JAXBException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            } finally {
+                lock.unlock();
             }
-
-            for (NotificationDetail detail : notification.getList()) {
-                detail.setJob(job.getName());
-                notifications.get(detail.getType().ordinal()).getDetails().add(detail);
+            if (notification != null) {
+                for (NotificationDetail detail : notification.getList()) {
+                    detail.setJob(job.getName());
+                    notifications.get(detail.getType().ordinal()).getDetails().add(detail);
+                }
             }
         }
 
@@ -160,87 +133,16 @@ public class ReportInfo extends ListView {
         return notifications;
     }
 
-    private long getLastStart(Job job) {
-        Run run = job.getLastBuild();
-        if (run == null) {
-            return 0L;
-        }
-        while (run != null && run.isBuilding()) {
-            run = run.getPreviousBuild();
-        }
-        if (run == null) {
-            return 0L;
-        }
-        return run.getStartTimeInMillis();
-    }
-
-    @SuppressWarnings("null")
-    private JobNotification refresh(Job job, long last) {
-        JobNotification n = new JobNotification();
-        n.setLastModified(last);
-
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            XPathFactory pathFactory = XPathFactory.newInstance();
-            File config = new File(job.getRootDir(), "config.xml");
-            Document doc = factory.newDocumentBuilder().parse(config);
-            XPath xpath = pathFactory.newXPath();
-            NodeList gradleBuild = (NodeList) xpath.evaluate("/project/builders/hudson.plugins.gradle.Gradle/rootBuildScriptDir", doc, XPathConstants.NODESET);
-            if (gradleBuild.getLength() > 0) {
-                Path path = Paths.get(gradleBuild.item(0).getTextContent().trim());
-                new AllNotificationBuilder(n, path).start();
-            } else {
-                NodeList rootPom = (NodeList) xpath.evaluate("/maven2-moduleset/rootPOM", doc, XPathConstants.NODESET);
-                boolean find = false;
-                if (rootPom.getLength() > 0) {
-                    File rootPomFile = new File(rootPom.item(0).getTextContent().trim());
-                    if (rootPomFile.isAbsolute()) {
-                        find = true;
-                        new AllNotificationBuilder(n, rootPomFile.getParentFile().toPath()).start();
-                    } else if (job.getLastBuild() instanceof AbstractBuild) {
-                        find = true;
-                        AbstractBuild build = (AbstractBuild) job.getLastBuild();
-                        FilePath workspace = build.getWorkspace();
-                        if (workspace != null) {
-                            URI uri = workspace.toURI();
-                            if (uri != null) {
-                                rootPomFile = new File(new File(uri.toURL().getFile()), rootPom.item(0).getTextContent().trim());
-                                new AllNotificationBuilder(n, rootPomFile.getParentFile().toPath()).start();
-                            }
-                        }
-                    }
-                }
-                if (!find) {
-                    rootPom = (NodeList) xpath.evaluate("/maven2-moduleset/rootModule", doc, XPathConstants.NODESET);
-                    if (rootPom.getLength() > 0) {
-                        if (job.getLastBuild() instanceof AbstractBuild) {
-                            AbstractBuild build = (AbstractBuild) job.getLastBuild();
-                            FilePath workspace = build.getWorkspace();
-                            if (workspace != null) {
-                                URI uri = workspace.toURI();
-                                if (uri != null) {
-                                    new AllNotificationBuilder(n, new File(uri.toURL().getFile()).toPath()).start();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (InterruptedException | XPathExpressionException | IOException | SAXException | ParserConfigurationException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-
+    public static void write(JobNotification notif, Job job) {
         Lock lock = getLock(job).writeLock();
         lock.lock();
         try {
-            CONTEXT.createMarshaller().marshal(n, new File(job.getRootDir(), "reportinfo.xml"));
+            CONTEXT.createMarshaller().marshal(notif, new File(job.getRootDir(), "reportinfo.xml"));
         } catch (JAXBException ex) {
             LOG.log(Level.SEVERE, null, ex);
         } finally {
             lock.unlock();
         }
-
-        return n;
     }
 
     @Extension
@@ -248,7 +150,7 @@ public class ReportInfo extends ListView {
 
         @Override
         public String getDisplayName() {
-            return "ReportInfo";
+            return Messages.ReportInfo_description();
         }
     }
 }

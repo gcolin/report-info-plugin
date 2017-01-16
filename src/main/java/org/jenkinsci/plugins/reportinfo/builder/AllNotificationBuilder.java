@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Admin.
+ * Copyright 2017 Gael COLIN.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,15 @@
 package org.jenkinsci.plugins.reportinfo.builder;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathFactory;
@@ -47,10 +50,20 @@ public class AllNotificationBuilder extends SimpleFileVisitor<Path> {
     private final NotificationBuilder[] all = {new Checkstyle(), new FindBugs(), new PMD(), new Tests()};
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     XPathFactory pathFactory = XPathFactory.newInstance();
+    private Set<String> ignoreFolders = new HashSet<>();
+    PrintStream logger;
 
-    public AllNotificationBuilder(JobNotification jn, Path path) {
+    public AllNotificationBuilder(JobNotification jn, Path path, String excludeFolders, PrintStream logger) {
         this.jn = jn;
         this.path = path;
+        this.logger = logger;
+        for(String folder: excludeFolders.split(",")) {
+            String ftrim = folder.trim();
+            if(ftrim.isEmpty()) {
+                continue;
+            }
+            ignoreFolders.add(ftrim);
+        }
     }
 
     public void start() {
@@ -59,6 +72,15 @@ public class AllNotificationBuilder extends SimpleFileVisitor<Path> {
         } catch (IOException ex) {
             ReportInfo.LOG.log(Level.SEVERE, null, ex);
         }
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        Path filenamePath = dir.getFileName();
+        if(filenamePath != null && ignoreFolders.contains(filenamePath.toString())) {
+            return FileVisitResult.SKIP_SUBTREE;
+        }
+        return FileVisitResult.CONTINUE;
     }
 
     @Override

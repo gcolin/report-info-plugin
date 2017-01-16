@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Admin.
+ * Copyright 2017 Gael COLIN.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.reportinfo.builder;
 
-import hudson.model.Job;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 
 /**
  *
- * @author Admin
+ * @author Gael COLIN
  */
 public interface NotificationBuilder {
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Admin.
+ * Copyright 2017 Gael COLIN.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,13 +28,11 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import org.jenkinsci.plugins.reportinfo.ReportInfo;
 import org.jenkinsci.plugins.reportinfo.model.JobNotification;
 import org.jenkinsci.plugins.reportinfo.model.NotificationDetail;
 import org.jenkinsci.plugins.reportinfo.model.NotificationType;
@@ -74,7 +72,7 @@ public class Tests implements NotificationBuilder {
                         + " in " + pattr.getNamedItem("classname").getNodeValue() + "." + pattr.getNamedItem("name").getNodeValue()));
             }
         } catch (XPathExpressionException | IOException | SAXException | ParserConfigurationException ex) {
-            ReportInfo.LOG.log(Level.SEVERE, null, ex);
+            ex.printStackTrace(builder.logger);
         }
     }
 

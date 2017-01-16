@@ -1,7 +1,7 @@
 <project name="fixoel" basedir="." default="main">
 
     <target name="main">
-        <fixcrlf srcdir="." excludes="screen.png"
+        <fixcrlf srcdir="." excludes=".git,target,work,**/*.png"
          eol="unix" eof="remove" />
     </target>
 
