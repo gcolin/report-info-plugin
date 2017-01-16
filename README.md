@@ -27,15 +27,15 @@ The file **reportinfo.hpi** can be imported into Jenkins (*pluginManager/advance
 
 ## How to setup
 
-In some job, add *Generated report info* Post-build action.
+### In some job, add *Generated report info* Post-build action.
 ![screen](https://github.com/gcolin/report-info/raw/master/config1.png)
 
-You can add some folders to exclude.
+### You can add some folders to exclude.
 ![screen](https://github.com/gcolin/report-info/raw/master/config2.png)
 
-Create a new *ReportView*.
+### Create a new *ReportView*.
 ![screen](https://github.com/gcolin/report-info/raw/master/config3.png)
 
-Add some projects
+### Add some projects
 ![screen](https://github.com/gcolin/report-info/raw/master/config4.png)
  
