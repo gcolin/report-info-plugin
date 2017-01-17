@@ -70,7 +70,7 @@ public class AllNotificationBuilder extends SimpleFileVisitor<Path> {
         try {
             Files.walkFileTree(path, this);
         } catch (IOException ex) {
-            ReportInfo.LOG.log(Level.SEVERE, null, ex);
+            ex.printStackTrace(logger);
         }
     }
 
