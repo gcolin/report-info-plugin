@@ -39,3 +39,6 @@ The file **reportinfo.hpi** can be imported into Jenkins (*pluginManager/advance
 ### Add some projects
 ![screen](https://github.com/gcolin/report-info/raw/master/config4.png)
  
+## License
+
+Licensed under the MIT license.

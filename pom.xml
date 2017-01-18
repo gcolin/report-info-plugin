@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
     <groupId>org.jenkins-ci.plugins.reportinfo</groupId>
-    <artifactId>reportinfo</artifactId>
+    <artifactId>report-info-plugin</artifactId>
     <version>1.0</version>
     <packaging>hpi</packaging>
 
@@ -28,7 +28,7 @@
         -->
     </properties>
 
-    <name>Report Info</name>
+    <name>Report Info Plugin</name>
     <description>A view with some information from Surefire, PMD, Findbugs and Checkstyle reports.</description>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Report+Plugin</url>
     <inceptionYear>2017</inceptionYear>
