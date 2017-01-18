@@ -30,7 +30,7 @@
 
     <name>Report Info Plugin</name>
     <description>A view with some information from Surefire, PMD, Findbugs and Checkstyle reports.</description>
-    <url>https://wiki.jenkins-ci.org/display/JENKINS/Report+Plugin</url>
+    <url>https://github.com/gcolin/report-info-plugin</url>
     <inceptionYear>2017</inceptionYear>
     <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
 
@@ -43,6 +43,7 @@
 
     <developers>
         <developer>
+            <id>gcolin</id>
             <name>Gael COLIN</name>
         </developer>
     </developers>
