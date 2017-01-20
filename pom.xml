@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
     <groupId>org.jenkins-ci.plugins.reportinfo</groupId>
-    <artifactId>report-info-plugin</artifactId>
+    <artifactId>report-info</artifactId>
     <version>1.0</version>
     <packaging>hpi</packaging>
 
